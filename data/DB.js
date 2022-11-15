@@ -78,7 +78,7 @@ const subscribeToChat = async (user1Id, user2Id, dispatch) => {
   const q = query(activeChatMessageCollection,
     orderBy('timestamp', 'asc'));
   
-  activeChatSubscription = onSnapshot(q, qSnap => {
+  activeChatUnsubscribe = onSnapshot(q, qSnap => {
     let newMessages = [];
     qSnap.forEach(docSnap => {
       let newMessage = docSnap.data();
