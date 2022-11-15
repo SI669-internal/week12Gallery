@@ -1,3 +1,4 @@
+import { LogBox } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { configureStore } from '@reduxjs/toolkit';
@@ -7,6 +8,8 @@ import { rootReducer } from './data/Reducer';
 import HomeScreen from './screens/HomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import ChatScreen from './screens/ChatScreen';
+
+LogBox.ignoreLogs(['AsyncStorage']);
 
 function App() {
   const Stack = createNativeStackNavigator();
