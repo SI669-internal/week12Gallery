@@ -17,6 +17,8 @@ import { actionTypes, loadUsers, loadActiveChat } from './Actions';
 let firebaseApp = null;
 const userCollection = 'users';
 const chatCollection = 'chats';
+let activeChatUnsubscribe = undefined;
+let usersUnsubscribe = undefined;
 
 const getFBApp = () => {
   if (!firebaseApp) {
@@ -38,12 +40,21 @@ const getDB = () => {
 }
 
 const signOutFB = () => {
+  if (activeChatUnsubscribe) {
+    activeChatUnsubscribe();
+  }
+  if (usersUnsubscribe) {
+    usersUnsubscribe();
+  }
   signOut(getAuth());
 }
 
 // SUBSCRIPTIONS
 const subscribeToUsers = (dispatch) => {
-  onSnapshot(collection(getDB(), userCollection), qSnap => {
+  if (usersUnsubscribe) {
+    usersUnsubscribe();
+  }
+  usersUnsubscribe = onSnapshot(collection(getDB(), userCollection), qSnap => {
     let newUsers = [];
     qSnap.forEach(docSnap => {
       let newUser = docSnap.data();
@@ -58,7 +69,6 @@ const constructChatId = (id1, id2) => {
   return [id1, id2].sort().join('_');
 }
 
-let activeChatUnsubscribe = undefined;
 
 const subscribeToChat = async (user1Id, user2Id, dispatch) => {
 
@@ -72,13 +82,17 @@ const subscribeToChat = async (user1Id, user2Id, dispatch) => {
   }
 
   if (activeChatUnsubscribe) {
+    console.log('unsubscribing in subscribeToChat');
     activeChatUnsubscribe();
   }
   const activeChatMessageCollection = collection(chatDoc, 'messages');
   const q = query(activeChatMessageCollection,
     orderBy('timestamp', 'asc'));
-  
+
+  console.log('Subscribing in subscribeToChat');
+
   activeChatUnsubscribe = onSnapshot(q, qSnap => {
+    console.log('snapshot received');
     let newMessages = [];
     qSnap.forEach(docSnap => {
       let newMessage = docSnap.data();

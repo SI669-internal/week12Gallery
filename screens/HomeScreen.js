@@ -3,7 +3,12 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { subscribeToUsers, getFBAuth, signOutFB, setActiveChat, subscribeToChat } from '../data/DB';
+import { 
+  subscribeToUsers, 
+  getFBAuth, 
+  signOutFB,  
+  subscribeToChat 
+} from '../data/DB';
 
 const auth = getFBAuth();
 

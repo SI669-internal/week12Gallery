@@ -151,11 +151,11 @@ function SignupBox({navigation}) {
 function LoginScreen({navigation}) {
 
   const [loginMode, setLoginMode] = useState(true);
-
+  
   useEffect(() => {
     onAuthStateChanged(getFBAuth(), user => {
       if (user) {
-        console.log('signed in! user:', user);
+        console.log('user is signed in!');
         navigation.navigate('Home');
       } else {
         console.log('user is signed out!');
