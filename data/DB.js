@@ -6,15 +6,23 @@ import {
   onSnapshot, 
   collection,
   doc,
-  setDoc, 
-  getDocs 
+  setDoc,
+  getDoc,
+  updateDoc, 
 } from 'firebase/firestore';
+import {
+  getStorage,
+  ref,
+  uploadBytes, 
+  getDownloadURL
+} from 'firebase/storage';
 import { firebaseConfig } from '../Secrets';
-import { actionTypes, loadUsers } from './Actions';
+import { actionTypes, loadUsers, loadGallery } from './Actions';
 
 let firebaseApp = null;
 const userCollection = 'users';
-
+let userSnapshotUnsubscribe = null;
+let gallerySnapshotUnsubscribe = null;
 
 const getFBApp = () => {
   if (!firebaseApp) {
@@ -35,26 +43,18 @@ const getDB = () => {
   return getFirestore(getFBApp());
 }
 
-const signOutFB = () => {
-  signOut(getAuth());
+const getFBStorage = () => {
+  return getStorage(getFBApp());
 }
 
-const loadUsersAndDispatch = async (action, dispatch) => {
-  // load users from Firebase
-  let db = getDB();
-  let auth = getAuth();
-  let currentUser = auth.currentUser;
-  let newUsers = [];
-
-  // if user is logged in, load 'em up
-  if (currentUser) {
-    const qSnap = await getDocs(collection(db, userCollection));
-    newUsers = processUserQuerySnapshot(qSnap);
-  }  
-  action.payload = {
-    users: newUsers
+const signOutFB = () => {
+  if (userSnapshotUnsubscribe) {
+    userSnapshotUnsubscribe();
   }
-  dispatch(action);
+  if (gallerySnapshotUnsubscribe) {
+    gallerySnapshotUnsubscribe();
+  }
+  signOut(getAuth());
 }
 
 const processUserQuerySnapshot = (uqSnap) => {
@@ -68,11 +68,26 @@ const processUserQuerySnapshot = (uqSnap) => {
 }
 
 const subscribeToUsers = (dispatch) => {
-  onSnapshot(collection(getDB(), userCollection), qSnap => {
+  if (userSnapshotUnsubscribe) {
+    userSnapshotUnsubscribe();
+  }
+  userSnapshotUnsubscribe = onSnapshot(collection(getDB(), userCollection), qSnap => {
     let newUsers = processUserQuerySnapshot(qSnap);
     console.log('\n\nusers coll updated:\n\n', newUsers);
     dispatch(loadUsers(newUsers));
   });
+}
+
+const subscribeToUserGallery = (dispatch) => {
+  if (gallerySnapshotUnsubscribe) {
+    gallerySnapshotUnsubscribe();
+  }
+  const currUserDoc = doc(getDB(), userCollection, getFBAuth().currentUser.uid);
+  gallerySnapshotUnsubscribe = onSnapshot(currUserDoc, docSnap => {
+    const gallery = docSnap.data().gallery;
+    console.log('got gallery', gallery);
+    dispatch(loadGallery(gallery));
+  })
 }
 
 const createUser = (action, dispatch) => {
@@ -83,18 +98,57 @@ const createUser = (action, dispatch) => {
   // no need to dispatch to reducer
 }
 
+const savePictureAndDispatch = async (action, dispatch) => {
+  const { pictureObject } = action.payload;
+
+  const storageRef = ref(getFBStorage());
+  const fileNameParts = pictureObject.uri.split('/');
+  const fileName = fileNameParts[fileNameParts.length - 1];
+  const currentPhotoRef = ref(storageRef, fileName);
+
+  try {
+    // fetch the image object from the local filesystem
+    const response = await fetch(pictureObject.uri);
+    const imageBlob = await response.blob(); // << seems to crash!!
+    
+    // then upload it to Firebase Storage
+    await uploadBytes(currentPhotoRef, imageBlob);
+    const downloadURL = await getDownloadURL(currentPhotoRef);
+
+    // create a record in Firestore
+    const currUserId = getFBAuth().currentUser.uid;
+    const currUserDoc = doc(getDB(), userCollection, currUserId);
+    const currUserSnap = await getDoc(currUserDoc);
+    const currUser = currUserSnap.data();
+    const newPictureObj = {...pictureObject, uri: downloadURL};
+    if (currUser.gallery) {
+      currUser.gallery.push(newPictureObj);
+    } else {
+      currUser.gallery = [newPictureObj]
+    }
+    await updateDoc(currUserDoc, {gallery: currUser.gallery})
+
+    // action.payload.pictureObject.uri = downloadURL;
+    // dispatch(action);
+  } catch(e) {
+    console.log(e);
+  } 
+}
+
 const saveAndDispatch = (action, dispatch) => {
+  console.log('saveAndDispatch', action);
   switch (action.type) {
-    case actionTypes.LOAD_USERS:
-      loadUsersAndDispatch(action, dispatch);
     case actionTypes.CREATE_USER:
-      createUser(action, dispatch);
+      return createUser(action, dispatch);
+    case actionTypes.SAVE_PICTURE:
+      return savePictureAndDispatch(action, dispatch);
   }
 }
 
 export { 
   saveAndDispatch, 
   subscribeToUsers, 
+  subscribeToUserGallery,
   getFBAuth,
-  signOutFB 
+  signOutFB, 
 };
