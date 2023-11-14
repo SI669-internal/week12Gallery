@@ -1,5 +1,5 @@
 import { Button } from '@rneui/themed';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { useSelector } from 'react-redux';
 import { signOut } from '../AuthManager';
 
@@ -25,7 +25,16 @@ function HomeScreen({navigation}) {
       <Text style={{padding:'5%'}}>
         Hi, {currentUser?.displayName}! Here are your photos:
       </Text>
+
       <View style={styles.listContainer}>
+        <Image
+          style={styles.logo}
+          source={require('../assets/ImageNotAvailable.png')}
+        />
+        <Image
+          style={styles.logo}
+          source={{uri: 'https://reactnative.dev/img/tiny_logo.png'}}
+        />
       </View>
       <Button
         onPress={async () => {
@@ -56,6 +65,11 @@ const styles = StyleSheet.create({
     flex: 0.8,
     justifyContent: 'center',
     alignItems: 'center'
+  }, 
+  logo: {
+    width: 400,
+    height: 100,
+    resizeMode: 'contain'
   }
 });
 
