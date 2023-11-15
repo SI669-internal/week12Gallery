@@ -3,7 +3,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import { setDoc, getDoc, doc, getFirestore } from 'firebase/firestore';
 
 import { firebaseConfig } from '../Secrets';
-import { SET_USER } from './Reducer';
+import { SET_USER, SET_PICTURE } from './Reducer';
 
 let app;
 const apps = getApps();
@@ -24,6 +24,7 @@ const addUser = (authUser) => {
     await setDoc(doc(db, 'users', authUser.uid), userToAdd);
   }
 }
+
 const setUser = (authUser) => {
   return async (dispatch) => {
     const userSnap = await getDoc(doc(db, 'users', authUser.uid));
@@ -38,4 +39,14 @@ const setUser = (authUser) => {
   }
 }
 
-export { addUser, setUser };
+// note: just a normal Action this time, not a Thunk
+const setPicture = (pictureObject) => {
+  return {
+    type: SET_PICTURE,
+    payload: {
+      pictureObject: pictureObject
+    }
+  }
+}
+
+export { addUser, setUser, setPicture };

@@ -6,8 +6,8 @@ import { signOut } from '../AuthManager';
 function HomeScreen({navigation}) {
   
   const currentUser = useSelector(state => state.currentUser);
+  const picture = useSelector(state => state.picture);
 
-  console.log('in HomeScreen, currentUser:', currentUser);
   return (
     <View style={styles.container}>
       <View style={styles.navHeader}>
@@ -29,11 +29,7 @@ function HomeScreen({navigation}) {
       <View style={styles.listContainer}>
         <Image
           style={styles.logo}
-          source={require('../assets/ImageNotAvailable.png')}
-        />
-        <Image
-          style={styles.logo}
-          source={{uri: 'https://reactnative.dev/img/tiny_logo.png'}}
+          source={picture}
         />
       </View>
       <Button
@@ -64,11 +60,12 @@ const styles = StyleSheet.create({
   listContainer: {
     flex: 0.8,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center', 
+    width: '100%'
   }, 
   logo: {
-    width: 400,
-    height: 100,
+    width: '90%',
+    height: '90%',
     resizeMode: 'contain'
   }
 });
