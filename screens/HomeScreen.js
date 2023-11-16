@@ -1,12 +1,20 @@
 import { Button } from '@rneui/themed';
-import { View, Text, StyleSheet, Image } from 'react-native';
-import { useSelector } from 'react-redux';
-import { signOut } from '../AuthManager';
+import { View, Text, StyleSheet, Image, FlatList } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { getAuthUser, signOut } from '../AuthManager';
+import { useEffect } from 'react';
+import { subscribeToUserOnSnapshot } from '../data/Actions';
 
 function HomeScreen({navigation}) {
   
   const currentUser = useSelector(state => state.currentUser);
-  const picture = useSelector(state => state.picture);
+  const gallery = currentUser.gallery;
+
+  const dispatch = useDispatch();
+  
+  useEffect(()=>{
+    dispatch(subscribeToUserOnSnapshot(getAuthUser().uid));
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -27,10 +35,22 @@ function HomeScreen({navigation}) {
       </Text>
 
       <View style={styles.listContainer}>
-        <Image
-          style={styles.logo}
-          source={picture}
+        <FlatList
+          data={gallery}
+          keyExtractor={item=>item.uri}
+          renderItem={({item}) => {
+            return (
+              <View>
+                <Image
+                  style={styles.logo}
+                  source={item}
+                />
+              </View>
+            );
+          }}
+
         />
+
       </View>
       <Button
         onPress={async () => {
@@ -64,8 +84,8 @@ const styles = StyleSheet.create({
     width: '100%'
   }, 
   logo: {
-    width: '90%',
-    height: '90%',
+    width: 200,
+    height: 200,
     resizeMode: 'contain'
   }
 });

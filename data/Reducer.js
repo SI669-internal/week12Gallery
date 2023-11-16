@@ -18,7 +18,6 @@ const _setPicture = (state, pictureObj) => {
 
 const initialState = {
   currentUser: {},
-  picture: {}
 }
 
 function rootReducer(state=initialState, action) {

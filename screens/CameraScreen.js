@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { Camera, CameraType } from 'expo-camera';
-import { setPicture } from '../data/Actions';
+import { savePicture } from '../data/Actions';
 
 function CameraScreen({navigation}) {
   
@@ -58,7 +58,7 @@ function CameraScreen({navigation}) {
       <Button
         onPress={async () => {
           let pictureObject = await theCamera.takePictureAsync({quality: 0.1});
-          dispatch(setPicture(pictureObject));
+          dispatch(savePicture(pictureObject));
           navigation.goBack();
         }}
       >
